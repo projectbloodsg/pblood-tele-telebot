@@ -8,66 +8,19 @@ BASE_URL = config('BASE_URL')
 
 bot = telebot.TeleBot(API_KEY)
 
-question1 = [{
-    'id':'1',
-    'text':"intro yadda yadda",
-    'url': ''
-}]
-
-response1 = [
-{
-    'id':'2',
-    'text':"yes",
-    'url': ''
-},
-{
-    'id':'3',
-    'text':"no",
-    'url': ''
-}
-]
-question2 = [{
-    'id':'4',
-    'text':"question2",
-    'url': ''
-}]
-
-response2 = [
-{
-    'id':'5',
-    'text':"yes2",
-    'url': ''
-},
-{
-    'id':'6',
-    'text':"no2",
-    'url': ''
-}
-]
-
 def getFirst():
-    response = requests.get("{base_url}/api/v1/get".format(base_url=BASE_URL))
+    response = requests.get("{base_url}/message/root".format(base_url=BASE_URL))
     if response.status_code != 200:
         print("Result not found!")
 
-    print(response)
-    return question1
+    return response.json()
 
 def getChild(id):
-    query_param = {'childId': id}
-    response = requests.get("{base_url}/api/v1/get/child".format(base_url=BASE_URL), params=query_param)
+    response = requests.get("{base_url}/message/child/{childId}".format(base_url=BASE_URL, childId=id))
     if response.status_code != 200:
         print("Result not found!")
-    
-    print(response)
-    if id == "1":
-        return response1
-    if id == "2":
-        return question2
-    if id == "3":
-        return question1
-    if id == "4":
-        return response2
+
+    return response.json()
 
 def gen_markup(id):
     response = getChild(id)
@@ -75,18 +28,17 @@ def gen_markup(id):
     length = len(response)
     markup.row_width = length
     for i in range(length):
-        markup.add(InlineKeyboardButton(response[i]["text"], callback_data = response[i]["id"]))
+        markup.add(InlineKeyboardButton(response[i]["content"], callback_data = response[i]["message_id"]))
     return markup
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     response = getChild(call.data)
-    bot.send_message(call.message.chat.id, response[0]['text'], reply_markup=gen_markup(response[0]['id']))
-
+    bot.send_message(call.message.chat.id, response[0]['content'], reply_markup=gen_markup(response[0]['message_id']))
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, question1[0]['text'], reply_markup=gen_markup("1"))
+    question = getFirst()
+    bot.send_message(message.chat.id, question[0]['content'], reply_markup=gen_markup(question[0]["message_id"]))
 
 bot.polling()
