@@ -1,7 +1,7 @@
-from cmath import nan
-import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from decouple import config
+import requests
+import telebot
 
 API_KEY = config('API_KEY')
 BASE_URL = config('BASE_URL')
@@ -46,9 +46,20 @@ response2 = [
 ]
 
 def getFirst():
+    response = requests.get("{base_url}/api/v1/get".format(base_url=BASE_URL))
+    if response.status_code != 200:
+        print("Result not found!")
+
+    print(response)
     return question1
 
 def getChild(id):
+    query_param = {'childId': id}
+    response = requests.get("{base_url}/api/v1/get/child".format(base_url=BASE_URL), params=query_param)
+    if response.status_code != 200:
+        print("Result not found!")
+    
+    print(response)
     if id == "1":
         return response1
     if id == "2":
