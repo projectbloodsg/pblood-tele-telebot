@@ -1,13 +1,12 @@
 from cmath import nan
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-#from telebot.utils import quick_markup
+from decouple import config
 
-API_KEY = "5127493459:AAE5mHB1lIYoLqSH7mllw1nvQLi2H89mQCo"
-message_chat_id = 0
+API_KEY = config('API_KEY')
+BASE_URL = config('BASE_URL')
 
 bot = telebot.TeleBot(API_KEY)
-
 
 question1 = [{
     'id':'1',
@@ -61,7 +60,7 @@ def getChild(id):
 
 def gen_markup(id):
     response = getChild(id)
-    markup = InlineKeyboardMarkup()#one_time_keyboard = True)
+    markup = InlineKeyboardMarkup()
     length = len(response)
     markup.row_width = length
     for i in range(length):
@@ -71,30 +70,12 @@ def gen_markup(id):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    #global message_chat_id
-    
-    #print(call.message.chat.id)
-    #print(message_chat_id)
     response = getChild(call.data)
     bot.send_message(call.message.chat.id, response[0]['text'], reply_markup=gen_markup(response[0]['id']))
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    #print(message.chat.id)
-    
-    #global message_chat_id 
-
-    #message_chat_id = message.chat.id
     bot.send_message(message.chat.id, question1[0]['text'], reply_markup=gen_markup("1"))
-    #bot.send_message(message.chat.id, "Yes/no?", reply_markup=gen_markup())
-
-
-@bot.message_handler()#commands=['hello'])
-def hello(message):
-    if message.text == 'hello':
-        bot.send_message(message.chat.id, "hello")
-
-        #bot.send_message(message.chat.id, "Hello!")
 
 bot.polling()
